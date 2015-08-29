@@ -39,10 +39,9 @@ struct irc;
 struct im_connection;
 struct account;
 
-
-#include <libotr/proto.h>
-#include <libotr/message.h>
-#include <libotr/privkey.h>
+#include <proto.h>
+#include <message.h>
+#include <privkey.h>
 
 /* representing a keygen job */
 typedef struct kg {
