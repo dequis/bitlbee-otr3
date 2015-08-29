@@ -1,0 +1,62 @@
+#!/bin/sh
+
+PKG_CONFIG=${PKG_CONFIG:-pkg-config}
+LIBGCRYPT_CONFIG=${LIBGCRYPT_CONFIG:-libgcrypt-config}
+LIBOTR=${LIBOTR:-libotr}
+CC=${CC:-gcc}
+
+if ! $PKG_CONFIG --max-version=3.999 $LIBOTR; then
+    if ! $PKG_CONFIG --max-version=3.999 libotr3; then
+        echo "libotr not found (install its development package?)"
+        exit 1
+    else
+        LIBOTR=libotr3
+    fi
+fi
+
+if ! $LIBGCRYPT_CONFIG --cflags > /dev/null; then
+    echo "libgcrypt not found (install its development package?)"
+    exit 1
+fi
+
+if ! $PKG_CONFIG --print-errors --exists bitlbee; then
+    echo "BitlBee not found (install its development package?)"
+    exit 1
+fi
+
+
+HEADERS_TESTCODE='
+#include <version.h>
+#if OTRL_VERSION_MAJOR != 3
+#error
+#endif'
+
+# figure out the correct include path, since some distros rename it to libotr3
+if [ -z "$LIBOTR_INCLUDE_PATH"]; then
+    BASE_INCLUDE_PATH=$($PKG_CONFIG --variable=includedir $LIBOTR)
+
+
+    for subdir in libotr libotr3; do
+        include_try=$BASE_INCLUDE_PATH/$subdir
+        echo "$HEADERS_TESTCODE" | $CC -c -o /dev/null -xc -I$include_try - 2>/dev/null >/dev/null
+        if [ "$?" = "0" ]; then
+            LIBOTR_INCLUDE_PATH=$include_try
+            break
+        fi
+    done
+
+fi
+
+if [ -z "$LIBOTR_INCLUDE_PATH" ]; then
+    echo "Valid header include path for libotr3 not found"
+    echo "Try specifying the LIBOTR_INCLUDE_PATH environment variable"
+    exit 1
+fi
+
+
+cat<<EOF >Makefile.settings
+CFLAGS=$($PKG_CONFIG --cflags $LIBOTR bitlbee) $($LIBGCRYPT_CONFIG --cflags) -I$LIBOTR_INCLUDE_PATH
+LDFLAGS=$($PKG_CONFIG --libs $LIBOTR bitlbee) $($LIBGCRYPT_CONFIG --libs)
+EOF
+
+echo Huge success.
