@@ -55,8 +55,10 @@ fi
 
 
 cat<<EOF >Makefile.settings
+CC=$CC
 CFLAGS=$($PKG_CONFIG --cflags $LIBOTR bitlbee) $($LIBGCRYPT_CONFIG --cflags) -I$LIBOTR_INCLUDE_PATH
 LDFLAGS=$($PKG_CONFIG --libs $LIBOTR bitlbee) $($LIBGCRYPT_CONFIG --libs)
+PLUGINDIR=$($PKG_CONFIG --variable=plugindir bitlbee)
 EOF
 
 echo Huge success.

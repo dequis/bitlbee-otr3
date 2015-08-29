@@ -13,4 +13,7 @@ clean:
 distclean: clean
 	rm -f Makefile.settings
 
-.PHONY: clean distclean
+install:
+	install -m 0755 otr.so $(PLUGINDIR)
+
+.PHONY: clean distclean install
